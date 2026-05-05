@@ -1,0 +1,20 @@
+plugins {
+	id 'com.android.application'
+}
+
+android {
+	namespace 'com.drudnitsky.priorityring'
+	compileSdk 36
+
+	defaultConfig {
+		applicationId 'com.drudnitsky.priorityring'
+		minSdk 34
+		targetSdk 36
+		versionCode 1
+		versionName '1.0'
+	}
+}
+
+dependencies {
+	implementation "org.jetbrains.kotlin:kotlin-stdlib:2.2.10"
+}
