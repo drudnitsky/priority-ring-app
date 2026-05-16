@@ -1,30 +1,32 @@
 # Overview
 
-Android currently lacks the ability to set the phone on **vibrate** mode while allowing a select group of contacts and applications to produce audible alerts — a feature I refer to as "priority ring". The closest alternative is Modes (Settings > Modes), such as Do Not Disturb (DND). However, unlike priority ring, modes silence the device and restrict calls and notifications to only approved sources. For users who prefer to keep their phones on vibrate for discreet awareness, this solution falls short.
+Android currently does not allow for some contacts and/or applications to bypass its **vibrate** mode and produce audible alerts for calls and notifications — a feature I refer to as **"priority ring"**. The closest alternative is a feature called _Modes_ (Settings > Modes), such as the Do Not Disturb (DND) mode. Unlike priority ring, using modes **silences** the device and **restricts** calls and notifications to approved sources only. For users who prefer to keep their phones on vibrate to remain aware of calls and notifications without disturbing others, Modes falls short.
 
-Priority ring can be achieved by a series of manual tweaks: 
+Although priority ring is not a native Android feature, users can "implement" it without using any 3rd-party apps or special tools:
 1. Set the phone ringer to normal (loud).
 2. Set the default ringtone and notification sound to `none`.
-3. Set custom ringtones and notification sounds for each priority contact and app.
-4. Ensure the phone is set to vibrate on calls and notifications - if desired.
+3. Ensure the phone is set to vibrate on calls and notifications.
+4. Set custom ringtones and notification sounds for each priority contact and app.
 
-The Priority Ring app helps automate steps 1 and 2 by surfacing a quick settings tile that toggles priority ring ON/OFF.
-The app does not automate the rest of the steps due to Android's strict security policies which require extensive permissions and additional complexity to achieve its goals.
+To simplify this process, this app automates steps 1-3 by adding a quick settings tile. The tile allows users to toggle priority ring ON/OFF. Despite that, to achieve true priority ring, users are still required to implement step 4 manually (See [Installation and setup](#installation-and-setup)).
+
+> [!NOTE]
+> This app does not automate the entire process outlined above due to Android's strict security policies. For the app to fully implement the "priority ring" feature, it will require the user to grant sensitive permissions and will require complicated solution.
 
 # Installation and setup
 
-To enable priority ring, the user must install the app and follow a series of steps for each priority contact and app:
+To enable priority ring, the user must install the app **and** setup each priority contact and app individually:
 
-## Installation
+## 1. Installation
 
 1. Download or [build](#build-the-app) the app.
 2. Install the app using any Android file manager.
-3. Add the Priority Ring tile to you quick settings tiles (swiping down from the notification area twice and tapping the pencil icon). Make sure to stretch the tile horizontally to allow for extra information to be visible.
+3. Add the Priority Ring tile to you quick settings tiles. Make sure to stretch the tile horizontally to allow for extra information to be visible.
 4. Long-press the tile to go to its app info page.
 5. Under the **Advanced** section, enable the **Modify system settings** option.
 6. Done.
 
-## Setup
+## 2. Setup
 
 Users can configure both contacts and applications as priority:
 
@@ -45,84 +47,94 @@ Priority ring can be achieved with any application notification as long as the a
 
 Press the Priority Ring tile to toggle priority ring ON/OFF.
 
-> [!NOTE]
-> Pressing the tile alone will simply set the ringer to normal (loud) and set/unset the default ringtone and notification sound to `none`. To achieve a true priority ring, the user must also configure their priority contacts and apps per the instruction in the [setup section](#setup).
-
-Note that:
+Please note:
+- Before using the app, make sure to follow the steps outlines in the [Installation and setup](#installation-and-setup)section.
 - Turning priority ring ON while the phone is on vibrate will switch the phone to loud (as well as set the ringtone and notification sound to `none`).
 - Priority ring is unavailable while the phone is on Silent mode. This is due to Android's strict permission policies.
 
 # Developer notes
 
-- The app was developed without using Android Studio, so only the bare minimum dependencies and tooling was used.
-- The app was developed using containers (Podman).
-- The app consists of a single service class (TileService) that handles the app logic and UI.
+- The app was developed without using Android Studio.
+- Only the bare minimum dependencies and tooling was used.
+- The app consists of a single service class (TileService) that handles the app logic and UI (the tile).
 
-## Dev environment setup
+## Development environment setup
 
-To recreate a development environment using Podman containers:
+> [!IMPORTANT]
+> The steps below assume the use of Podman containers.
 
-1. On your local machine create a dedicated directory for Android development (e.g., `~/android-dev`).
+1. On your local machine, create a dedicated directory for Android development (e.g., `~/android-dev`).
 2. Clone this repository into it:
 	```
-	cd ~/android-dev && git clone [URL]
+	cd ~/android-dev && git clone https://github.com/drudnitsky/priority-ring-app
 	```
 3. Download the following dependencies for **Linux OS** (binary only, if available):
 	1. [OpenJDK v21.0.2](https://jdk.java.net/archive/)
 	2. [Android command line tools - latest version](https://developer.android.com/studio#command-line-tools-only)
 
-> [!NOTE]
-> The dependencies above are general dependencies for Android app development.
-> App-specific dependencies, such as various Google Android libraries, will be imported automatically during the application build process.
+	> [!TIP]
+	> The dependencies above are general dependencies for Android app development.
+	> App-specific dependencies, such as various Google Android libraries, will be imported automatically during the application build process.
 
-4. Unpack and place each dependency in `~/android-dev`.
+4. Unpack the downloaded dependencies to mirror the following directory structure:
+	```
+	android-dev/
+		├── priority-ring-app/
+		├── jdk-21.0.2/
+		└── android-sdk/
+			└── cmdline-tools/
+				└── latest/
+					├── bin/
+					├── lib/
+					├── source.properties
+					└── notice.txt
+	```
+	> [!IMPORTANT]
+	> Notice the addition of the `android-sdk` directory and the `latest` subdirectory under the `cmdline-tools` directory. This structure is required for the build process to successfully resolve dependencies.
 
-At this point, the `~/android-dev` directory should resemble the following:
+5. Create a new Linux Debian container. Make sure to mount your local `~/android-dev` folder:
+	```
+	podman container create -t --name "android-dev" -v ~/android-dev:/home debian:latest
+	```
+	> [!IMPORTANT]
+	> if your host OS is **MacOS with Apple chip**, You **must** provide the 64-bit Intel/AMD libraries that the AAPT2 (Android Asset Packaging Tool) binary is expecting:
+	> ```
+	> dpkg --add-architecture amd64
+	> apt-get update
+	> apt install -y libc6:amd64 libstdc++6:amd64 zlib1g:amd64
+	> ```
 
+6. Start the container.
+7. Add the following to `/.bashrc` or `/etc/bash.bashrc`:
+	```
+	export ANDROID_HOME="/home/android-sdk"
+	export JAVA_HOME="/home/jdk-21.0.2"
+	export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$JAVA_HOME/bin"		
+	```
+
+Lastly, I recommend using VS Code with the Dev Containers plugin to connect to your container and work on the project. In addition, you should consider importing additional Android command line tools for development (like `adb`):
 ```
-.
-└── android-dev/
-    ├── jdk-21.0.2/
-    ├── cmdline-tools/
-    ├── gradle-9.4.1/
-    └── priority-ring-app/
+sdkmanager "platform-tools" "build-tools;36.0.0" "platforms;android-36"
 ```
-
-Next:
-
-5. Create a new Linux Debian container. Make sure to mount your local `~/android-dev` folder in the container:
-```
-podman container create -t --name "android-dev" -v ~/android-dev:/home/android-dev debian:latest
-```
-6. start the container and add the following to `/.bashrc` or `/etc/bash.bashrc`:
-
-```
-export ANDROID_HOME="/home/cmdline-tools"
-export JAVA_HOME="/home/jdk"
-export GRADLE_HOME="/home/gradle"
-export PATH="$PATH:$ANDROID_HOME/bin:$JAVA_HOME/bin:$GRADLE_HOME/bin"		
-```
-7. **Note**: if your host OS is **MacOS with Apple chip**, You **must** provide the 64-bit Intel/AMD libraries that the AAPT2 (Android Asset Packaging Tool) binary is expecting:
- ```
- dpkg --add-architecture amd64
- apt-get update
- apt install -y libc6:amd64 libstdc++6:amd64 zlib1g:amd64
- ```
-
-Lastly, use VS Code with the Dev Containers plugin to connect to your container and work on the project.
 
 ## Build the app
+
+In order to build the app, Android requires developers to accepts its SDK end user agreement. You will only need to do this once before the first time you build the app. 
+
+```
+yes | sdkmanager --licenses
+```
 
 To build the app:
 
 1. Navigate to the project root folder (`/priority-ring-app`).
 2. Enter the following command:
 	```
-	./gradle build
+	./gradlew build
 	```
 3. Upon completion, the APK will be available at:
 	```
 	~/android-dev/priority-ring/app/build/outputs/apk/debug/app-debug.apk
 	```
 
-To install and use the app, follow the instruction provided [here](#installation).
+To install and use the app on an Android device, see the [installation](#installation) and [usage](#usage) sections. 
