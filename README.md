@@ -13,6 +13,11 @@ To simplify this process, this app automates steps 1-3 by adding a quick setting
 > [!NOTE]
 > This app does not automate the entire process outlined above due to Android's strict security policies. For the app to fully implement the "priority ring" feature, it will require the user to grant sensitive permissions and will require complicated solution.
 
+# App permissions
+
+The following permissions are required for the app to work:
+1. Modify system settings: required to make changes to ringtone, notification sounds and ringer mode.
+
 # Installation and setup
 
 To enable priority ring, the user must install the app **and** setup each priority contact and app individually:
@@ -22,8 +27,8 @@ To enable priority ring, the user must install the app **and** setup each priori
 1. Download or [build](#build-the-app) the app.
 2. Install the app using any Android file manager.
 3. Add the Priority Ring tile to you quick settings tiles. Make sure to stretch the tile horizontally to allow for extra information to be visible.
-4. Long-press the tile to go to its app info page.
-5. Under the **Advanced** section, enable the **Modify system settings** option.
+4. Press and hold the app tile to go to the app info page.
+5. Allow the app to modify system settings: **Advanced** > **Modify system settings** > **Allow modifying system settings** > toggle ON (see [app permissions](#app-permissions)).
 6. Done.
 
 ## 2. Setup
